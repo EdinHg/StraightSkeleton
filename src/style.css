@@ -1,0 +1,74 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #1a1a1a;
+  color: #eee;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+}
+
+.controls button {
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.controls button:hover {
+  background: #444;
+}
+
+.controls select {
+  background: #333;
+  color: #eee;
+  border: 1px solid #555;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.controls select option {
+  background: #333;
+  color: #eee;
+}
+
+.controls .separator {
+  width: 1px;
+  height: 1.2rem;
+  background: #555;
+}
+
+.controls .status {
+  color: #aaa;
+}
+
+canvas {
+  flex: 1;
+  background: #000;
+  cursor: crosshair;
+}
