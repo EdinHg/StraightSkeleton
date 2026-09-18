@@ -1,9 +1,10 @@
 import './style.css'
 import { PolygonCanvas } from './PolygonCanvas'
-import { computeStraightSkeleton } from './SSImplementation.ts'
+import { Skeleton } from './Skeleton'
 import { loadSavedPolygons, savePolygon, deletePolygon } from './PolygonStorage'
 import { Point } from './models/Point'
 import { POLYGON_PRESETS } from './presets'
+import { generateRandomSimplePolygon } from './randomPolygon'
 
 const app = document.getElementById('app')!
 app.innerHTML = `
@@ -14,6 +15,10 @@ app.innerHTML = `
     <button id="clear">Clear</button>
     <button id="undo">Undo</button>
     <button id="compute">Compute Skeleton</button>
+    <label class="toggle"><input type="checkbox" id="show-node-numbers" checked> Node numbers</label>
+    <span class="separator"></span>
+    <input type="number" id="random-vertex-count" min="3" max="200" value="8" style="width:4rem">
+    <button id="generate-random">Generate Random</button>
     <span class="separator"></span>
     <button id="save">Save</button>
     <select id="polygon-list"><option value="">-- Saved Polygons --</option></select>
@@ -26,6 +31,7 @@ app.innerHTML = `
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const statusEl = document.getElementById('status')!
+statusEl.hidden = true;
 const polyCanvas = new PolygonCanvas(canvas, statusEl)
 const polygonList = document.getElementById('polygon-list') as HTMLSelectElement
 const presetList = document.getElementById('preset-list') as HTMLSelectElement
@@ -77,7 +83,7 @@ function recomputeSkeleton(): boolean {
         return false
     }
 
-    const skeleton = computeStraightSkeleton(polygon)
+    const skeleton = new Skeleton(polygon).compute()
     if (!skeleton) {
         statusEl.textContent = 'Failed to compute the straight skeleton.'
         polyCanvas.clearSkeleton()
@@ -94,6 +100,21 @@ polyCanvas.onPolygonChanged = recomputeSkeleton
 document.getElementById('clear')!.addEventListener('click', () => polyCanvas.clear())
 document.getElementById('undo')!.addEventListener('click', () => polyCanvas.undo())
 document.getElementById('compute')!.addEventListener('click', () => recomputeSkeleton())
+
+document.getElementById('show-node-numbers')!.addEventListener('change', (e) => {
+    polyCanvas.setShowNodeNumbers((e.target as HTMLInputElement).checked)
+})
+
+document.getElementById('generate-random')!.addEventListener('click', () => {
+    const input = document.getElementById('random-vertex-count') as HTMLInputElement
+    let count = parseInt(input.value, 10)
+    if (isNaN(count) || count < 3) count = 3
+    if (count > 10000) count = 10000
+    input.value = String(count)
+    const points = generateRandomSimplePolygon(count, canvas.clientWidth, canvas.clientHeight)
+    polyCanvas.loadPolygon(points)
+    statusEl.textContent = `Random polygon generated with ${points.length} vertices.`
+})
 
 document.getElementById('load-preset')!.addEventListener('click', () => {
     const name = presetList.value

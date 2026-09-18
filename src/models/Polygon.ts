@@ -1,23 +1,27 @@
 import { Edge } from "./Edge";
 import { Point } from "./Point";
-import { EPS } from "../constants";
+import { crossProduct } from "../utils/geometryUtils";
 
 
 export class Polygon {
     vertices: Point[];
     edges: Edge[];
+    isPositive: boolean = true;
+    holes: Point[][] = [];
 
     constructor(vertices: Point[]) {
         this.vertices = vertices;
         this.edges = this.createEdges();
+        this.orientCCW();
+        this.isPositive = this.area() > 0;
     }
 
-    public orientCCW(): void {
+    private orientCCW(): void {
         const area = this.area();
         if (area < 0) {
             this.vertices.reverse();
+            this.edges = this.createEdges();
         }
-        this.edges = this.createEdges();
     }
 
     public area(): number {
@@ -31,6 +35,29 @@ export class Polygon {
         }
 
         return area / 2;
+    }
+
+    public reverse(): void {
+        this.vertices.reverse();
+        this.edges = this.createEdges();
+        this.isPositive = !this.isPositive;
+    }
+
+    public isReflexVertex(index: number): boolean {
+        const n = this.vertices.length;
+        if (n < 3) return false;
+
+        const prev = this.vertices[(index - 1 + n) % n];
+        const curr = this.vertices[index];
+        const next = this.vertices[(index + 1) % n];
+
+        return this.isPositive ?
+            crossProduct(prev, curr, next) < 0 :
+            crossProduct(prev, curr, next) > 0;
+    }
+
+    public getReflexVertices(): Point[] {
+        return this.vertices.filter((_, index) => this.isReflexVertex(index));
     }
 
     private createEdges(): Edge[] {
@@ -52,34 +79,5 @@ export class Polygon {
 
     public getEdges(): Edge[] {
         return this.edges;
-    }
-
-    public isConvex(): boolean {
-        const n = this.vertices.length;
-
-        if (n < 4) {
-            return true;
-        }
-
-        let sign = 0;
-
-        for (let i = 0; i < n; i++) {
-            const dx1 = this.vertices[(i + 2) % n].x - this.vertices[(i + 1) % n].x;
-            const dy1 = this.vertices[(i + 2) % n].y - this.vertices[(i + 1) % n].y;
-            const dx2 = this.vertices[i].x - this.vertices[(i + 1) % n].x;
-            const dy2 = this.vertices[i].y - this.vertices[(i + 1) % n].y;
-
-            const zCrossProduct = dx1 * dy2 - dy1 * dx2;
-
-            if (Math.abs(zCrossProduct) > EPS) {
-                if (sign === 0) {
-                    sign = zCrossProduct > 0 ? 1 : -1;
-                } else if ((zCrossProduct > 0 ? 1 : -1) !== sign) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 }

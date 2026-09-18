@@ -2,13 +2,13 @@ import { Polygon } from "./Polygon";
 import { VertexNode } from "./VertexNode";
 
 export class LAV {
-    node: VertexNode | null = null;
+    node: VertexNode;
 
     constructor(polygon: Polygon) {
         const { edges, vertices } = polygon;
         const n = vertices.length;
 
-        if (n === 0) return;
+        if (n === 0) throw new Error("Polygon has no vertices.");
 
         // 1. Instantiation and edge assignment
         const nodes = vertices.map((vertex, i) => {
@@ -16,6 +16,7 @@ export class LAV {
             const prevEdge = edges[i === 0 ? n - 1 : i - 1];
             const nextEdge = edges[i];
             node.setEdges(prevEdge, nextEdge);
+            node.isReflex = polygon.isReflexVertex(i);
             return node;
         });
 

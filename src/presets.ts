@@ -21,23 +21,11 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
         name: 'Pentagon',
         category: 'convex',
         outer: [
-            { x: 250, y: 400 },
-            { x: 250, y: 180 },
-            { x: 400, y: 100 },
-            { x: 550, y: 180 },
-            { x: 550, y: 400 },
-        ],
-    },
-    {
-        name: 'Hexagon',
-        category: 'convex',
-        outer: [
-            { x: 250, y: 280 },
-            { x: 320, y: 130 },
-            { x: 480, y: 130 },
-            { x: 550, y: 280 },
-            { x: 480, y: 430 },
-            { x: 320, y: 430 },
+{ x: 400, y: 100 },      // Top vertex
+  { x: 543, y: 204 },      // Upper right
+  { x: 488, y: 371 },      // Lower right
+  { x: 312, y: 371 },      // Lower left
+  { x: 257, y: 204 }       // Upper left
         ],
     },
     {
@@ -49,40 +37,6 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
             { x: 220, y: 400 },
         ],
     },
-    {
-        name: 'Trapezoid',
-        category: 'convex',
-        outer: [
-            { x: 300, y: 150 },
-            { x: 500, y: 150 },
-            { x: 580, y: 400 },
-            { x: 220, y: 400 },
-        ],
-    },
-    {
-        name: 'Octagon',
-        category: 'convex',
-        outer: [
-            { x: 320, y: 130 },
-            { x: 480, y: 130 },
-            { x: 580, y: 230 },
-            { x: 580, y: 330 },
-            { x: 480, y: 430 },
-            { x: 320, y: 430 },
-            { x: 220, y: 330 },
-            { x: 220, y: 230 },
-        ],
-    },
-    {
-        name: 'Diamond',
-        category: 'convex',
-        outer: [
-            { x: 400, y: 100 },
-            { x: 580, y: 275 },
-            { x: 400, y: 450 },
-            { x: 220, y: 275 },
-        ],
-    },
     // ── Concave ──────────────────────────────────────────────
     {
         name: 'L-shape',
@@ -92,38 +46,6 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
             { x: 400, y: 150 },
             { x: 400, y: 270 },
             { x: 300, y: 270 },
-            { x: 300, y: 400 },
-            { x: 200, y: 400 },
-        ],
-    },
-    {
-        name: 'T-shape',
-        category: 'concave',
-        outer: [
-            { x: 350, y: 150 },
-            { x: 500, y: 150 },
-            { x: 500, y: 270 },
-            { x: 600, y: 270 },
-            { x: 600, y: 370 },
-            { x: 500, y: 370 },
-            { x: 500, y: 480 },
-            { x: 350, y: 480 },
-            { x: 350, y: 370 },
-            { x: 250, y: 370 },
-            { x: 250, y: 270 },
-            { x: 350, y: 270 },
-        ],
-    },
-    {
-        name: 'C-shape',
-        category: 'concave',
-        outer: [
-            { x: 200, y: 150 },
-            { x: 550, y: 150 },
-            { x: 550, y: 400 },
-            { x: 450, y: 400 },
-            { x: 450, y: 250 },
-            { x: 300, y: 250 },
             { x: 300, y: 400 },
             { x: 200, y: 400 },
         ],
@@ -163,20 +85,6 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
         ],
     },
     {
-        name: 'Z-shape',
-        category: 'concave',
-        outer: [
-            { x: 340, y: 150 },
-            { x: 580, y: 150 },
-            { x: 580, y: 270 },
-            { x: 460, y: 270 },
-            { x: 460, y: 390 },
-            { x: 220, y: 390 },
-            { x: 220, y: 270 },
-            { x: 340, y: 270 },
-        ],
-    },
-    {
         name: 'U-shape',
         category: 'concave',
         outer: [
@@ -188,24 +96,6 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
             { x: 580, y: 150 },
             { x: 580, y: 430 },
             { x: 220, y: 430 },
-        ],
-    },
-    {
-        name: 'H-shape',
-        category: 'concave',
-        outer: [
-            { x: 220, y: 130 },
-            { x: 300, y: 130 },
-            { x: 300, y: 250 },
-            { x: 500, y: 250 },
-            { x: 500, y: 130 },
-            { x: 580, y: 130 },
-            { x: 580, y: 450 },
-            { x: 500, y: 450 },
-            { x: 500, y: 330 },
-            { x: 300, y: 330 },
-            { x: 300, y: 450 },
-            { x: 220, y: 450 },
         ],
     },
     {
@@ -238,7 +128,7 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
         ],
     },
     {
-        name: 'Fortress Keep',
+        name: 'Svasta',
         category: 'concave',
         outer: [
             { x: 200, y: 200 },
@@ -269,72 +159,6 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
         ],
     },
     // ── Holes ────────────────────────────────────────────────
-    {
-        name: 'Courtyard House',
-        category: 'holes',
-        outer: [
-            { x: 200, y: 130 },
-            { x: 600, y: 130 },
-            { x: 600, y: 420 },
-            { x: 200, y: 420 },
-        ],
-        holes: [
-            [
-                { x: 320, y: 220 },
-                { x: 480, y: 220 },
-                { x: 480, y: 330 },
-                { x: 320, y: 330 },
-            ],
-        ],
-    },
-    {
-        name: 'L-shape with Light Well',
-        category: 'holes',
-        outer: [
-            { x: 200, y: 150 },
-            { x: 450, y: 150 },
-            { x: 450, y: 280 },
-            { x: 350, y: 280 },
-            { x: 350, y: 430 },
-            { x: 200, y: 430 },
-        ],
-        holes: [
-            [
-                { x: 250, y: 210 },
-                { x: 310, y: 210 },
-                { x: 310, y: 250 },
-                { x: 250, y: 250 },
-            ],
-        ],
-    },
-    {
-        name: 'House with Corner Boxes',
-        category: 'holes',
-        outer: [
-            { x: 170, y: 110 },
-            { x: 290, y: 110 },
-            { x: 290, y: 180 },
-            { x: 510, y: 180 },
-            { x: 510, y: 110 },
-            { x: 630, y: 110 },
-            { x: 630, y: 180 },
-            { x: 630, y: 380 },
-            { x: 510, y: 380 },
-            { x: 510, y: 450 },
-            { x: 290, y: 450 },
-            { x: 290, y: 380 },
-            { x: 170, y: 380 },
-            { x: 170, y: 180 },
-        ],
-        holes: [
-            [
-                { x: 320, y: 230 },
-                { x: 480, y: 230 },
-                { x: 480, y: 330 },
-                { x: 320, y: 330 },
-            ],
-        ],
-    },
     {
         name: 'Square Ring',
         category: 'holes',
@@ -407,35 +231,17 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
                 { x: 560, y: 230 },
                 { x: 520, y: 230 },
             ],
-        ],
-    },
-    {
-        name: 'Triple Atrium',
-        category: 'holes',
-        outer: [
-            { x: 180, y: 140 },
-            { x: 620, y: 140 },
-            { x: 620, y: 410 },
-            { x: 180, y: 410 },
-        ],
-        holes: [
             [
-                { x: 220, y: 190 },
-                { x: 330, y: 190 },
-                { x: 330, y: 280 },
-                { x: 220, y: 280 },
+                { x: 240, y: 430 },
+                { x: 240, y: 350 },
+                { x: 280, y: 350 },
+                { x: 280, y: 430 },
             ],
             [
-                { x: 370, y: 190 },
-                { x: 430, y: 190 },
-                { x: 430, y: 280 },
-                { x: 370, y: 280 },
-            ],
-            [
-                { x: 470, y: 190 },
-                { x: 580, y: 190 },
-                { x: 580, y: 280 },
-                { x: 470, y: 280 },
+                { x: 520, y: 430 },
+                { x: 520, y: 350 },
+                { x: 560, y: 350 },
+                { x: 560, y: 430 },
             ],
         ],
     },

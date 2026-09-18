@@ -48,3 +48,8 @@ export function sanitizePolygon(polygon: Polygon): void {
         polygon.edges.push(new Edge(start, end));
     }
 }
+
+export function crossProduct(p1: Point, p2: Point, p3: Point): number {
+    return (p2.x - p1.x) * (p3.y - p2.y) - (p2.y - p1.y) * (p3.x - p2.x);
+}
+

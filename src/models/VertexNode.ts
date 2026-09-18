@@ -3,6 +3,12 @@ import type { Edge } from "./Edge";
 import { Bisector } from "./Bisector";
 
 export class VertexNode {
+    private static nextId = 1;
+    readonly id: number;
+
+    static resetIds(): void {
+        VertexNode.nextId = 1;
+    }
     vertex: Point;
     processed = false;
     previous: VertexNode | null = null;
@@ -11,9 +17,11 @@ export class VertexNode {
     nextEdge: Edge | null = null;
     bisector: Bisector | null = null;
     time: number = 0; // Time at which this vertex will collapse
+    isReflex: boolean = false;
 
 
     constructor(vertex: Point) {
+        this.id = VertexNode.nextId++;
         this.vertex = vertex;
     }
 
@@ -24,7 +32,7 @@ export class VertexNode {
 
     public computeBisector(): void {
         if (this.prevEdge && this.nextEdge) {
-            this.bisector = new Bisector(this);
+            this.bisector = new Bisector(this.prevEdge, this.nextEdge);
         }
     }
 }

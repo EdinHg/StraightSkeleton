@@ -1,17 +1,14 @@
-import { VertexNode } from "./VertexNode";
 import { Vector } from "./Vector";
+import { Edge } from "./Edge";
 import { EPS } from "../constants";
 
 
 export class Bisector {
-    vertex: VertexNode;
     velocity: Vector;
 
-    constructor(vertexNode: VertexNode) {
-        this.vertex = vertexNode;
-
-        const normal1 = vertexNode.prevEdge!.normal;
-        const normal2 = vertexNode.nextEdge!.normal;
+    constructor(leftEdge: Edge, rightEdge: Edge) {
+        const normal1 = leftEdge.normal;
+        const normal2 = rightEdge.normal;
 
         const sum = normal1.add(normal2);
         const dotProd = 1 + normal1.dot(normal2);

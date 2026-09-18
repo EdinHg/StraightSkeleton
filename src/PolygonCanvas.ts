@@ -18,6 +18,7 @@ export class PolygonCanvas {
     private currentSkeleton: StraightSkeletonResult | null = null
     private hoveredSkeletonEdge = -1
     private holes: Point[][] = []
+    private showNodeNumbers = true
     public onPolygonChanged: (() => void) | null = null
 
     constructor(canvas: HTMLCanvasElement, statusEl: HTMLElement) {
@@ -236,6 +237,13 @@ export class PolygonCanvas {
             this.ctx.fill()
         }
 
+        for (let i = 0; i < this.points.length; i++) {
+            const p = this.points[i]
+            this.ctx.fillStyle = '#ff0'
+            this.ctx.font = '11px monospace'
+            this.ctx.fillText(String(i), p.x + 6, p.y - 6)
+        }
+
         if (this.currentSkeleton?.polygonHistory) {
             this.ctx.strokeStyle = 'rgba(255,255,255,0.18)'
             this.ctx.lineWidth = 1
@@ -256,7 +264,7 @@ export class PolygonCanvas {
                 const edge = this.currentSkeleton.edges[i]
                 if (!edge.source || !edge.target) continue
                 const isHovered = i === this.hoveredSkeletonEdge
-                this.ctx.strokeStyle = `hsl(${(i * 360) / this.currentSkeleton.edges.length}, 100%, 50%)`
+                this.ctx.strokeStyle = 'red' // `hsl(${(i * 360) / this.currentSkeleton.edges.length}, 100%, 50%)`
                 this.ctx.lineWidth = isHovered ? 4 : 2
                 this.ctx.beginPath()
                 this.ctx.moveTo(edge.source.x, edge.source.y)
@@ -282,6 +290,19 @@ export class PolygonCanvas {
                         this.ctx.lineTo(he.rightEdge.end.x, he.rightEdge.end.y)
                         this.ctx.stroke()
                     }
+                }
+            }
+
+            if (this.showNodeNumbers && this.currentSkeleton.nodes) {
+                for (const node of this.currentSkeleton.nodes) {
+                    const v = node.vertex
+                    this.ctx.fillStyle = '#0ff'
+                    this.ctx.beginPath()
+                    this.ctx.arc(v.x, v.y, 3, 0, Math.PI * 2)
+                    this.ctx.fill()
+                    this.ctx.fillStyle = '#0ff'
+                    this.ctx.font = '10px monospace'
+                    // this.ctx.fillText('#' + node.id, v.x - 12, v.y + 14)
                 }
             }
         }
@@ -358,5 +379,10 @@ export class PolygonCanvas {
 
     public getPoints(): Point[] {
         return this.points
+    }
+
+    public setShowNodeNumbers(v: boolean): void {
+        this.showNodeNumbers = v
+        this.draw()
     }
 }
