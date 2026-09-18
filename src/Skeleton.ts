@@ -40,7 +40,7 @@ export class Skeleton {
         this.events = [];
         this.activeNodes.clear();
         this.nodes = [];
-        this.result = { edges: [], nodes: [] }; // Removed dead polygonHistory
+        this.result = { edges: [], nodes: [], polygonHistory: null };
     }
 
     private isValidEdgeEvent(event: EdgeEvent): boolean {

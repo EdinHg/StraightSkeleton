@@ -342,7 +342,7 @@ export class PolygonCanvas {
 
     public getPolygon(): Polygon | null {
         if (!this.closed || this.points.length < 3) return null
-        return new Polygon(this.points)
+        return new Polygon(this.points, this.holes)
     }
 
     public isClosed(): boolean {
