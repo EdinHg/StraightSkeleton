@@ -14,9 +14,18 @@ export function calculateNormal(start: Point, end: Point): Vector {
     return normal.normalize();
 }
 
-export function sanitizePolygon(polygon: Polygon): void {
-    const vertices = polygon.vertices;
-    if (vertices.length < 3) return;
+export function signedArea(pts: Point[]): number {
+    let area = 0;
+    for (let i = 0; i < pts.length; i++) {
+        const cur = pts[i];
+        const next = pts[(i + 1) % pts.length];
+        area += cur.x * next.y - next.x * cur.y;
+    }
+    return area / 2;
+}
+
+export function sanitizeContour(vertices: Point[]): Point[] {
+    if (vertices.length < 3) return [...vertices];
 
     const cleaned: Point[] = [vertices[0]];
     for (let i = 1; i < vertices.length; i++) {
@@ -38,6 +47,14 @@ export function sanitizePolygon(polygon: Polygon): void {
             cleaned.pop();
         }
     }
+
+    return cleaned;
+}
+
+export function sanitizePolygon(polygon: Polygon): void {
+    if (polygon.vertices.length < 3) return;
+
+    const cleaned = sanitizeContour(polygon.vertices);
 
     polygon.vertices.length = 0;
     polygon.vertices.push(...cleaned);

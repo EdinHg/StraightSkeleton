@@ -1,5 +1,6 @@
 import { Edge } from "./Edge";
 import { Point } from "./Point";
+import { Contour } from "./Contour";
 import { crossProduct } from "../utils/geometryUtils";
 
 
@@ -91,5 +92,13 @@ export class Polygon {
 
     public getHoles(): Point[][] {
         return this.holes;
+    }
+
+    public getContours(): Contour[] {
+        const contours: Contour[] = [new Contour(this.vertices, 'outer')];
+        for (const hole of this.holes) {
+            contours.push(new Contour(hole, 'hole'));
+        }
+        return contours;
     }
 }

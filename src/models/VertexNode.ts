@@ -1,5 +1,6 @@
 import type { Point } from "./Point";
 import type { Edge } from "./Edge";
+import type { LAV } from "./LAV";
 import { Bisector } from "./Bisector";
 
 export class VertexNode {
@@ -18,6 +19,7 @@ export class VertexNode {
     bisector: Bisector | null = null;
     time: number = 0; // Time at which this vertex will collapse
     isReflex: boolean = false;
+    lav: LAV | null = null;
 
 
     constructor(vertex: Point) {
