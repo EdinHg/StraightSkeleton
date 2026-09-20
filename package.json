@@ -10,11 +10,14 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@types/three": "^0.186.0",
     "typescript": "~6.0.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.11"
   },
   "dependencies": {
-    "flatqueue": "^3.1.0"
+    "flatqueue": "^3.1.0",
+    "konva": "^10.6.0",
+    "three": "^0.186.0"
   }
 }
