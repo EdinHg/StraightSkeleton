@@ -131,7 +131,6 @@ export const POLYGON_PRESETS: PolygonPreset[] = [
         name: 'Svasta',
         category: 'concave',
         outer: [
-            { x: 200, y: 200 },
             { x: 200, y: 140 },
             { x: 260, y: 140 },
             { x: 260, y: 100 },

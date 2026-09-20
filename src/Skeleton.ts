@@ -24,8 +24,9 @@ export class Skeleton {
     result?: StraightSkeletonResult;
     queue?: FlatQueue<number>;
     events?: SkeletonEvent[];
-    private activeNodes = new Set<VertexNode>(); // Tracks ONLY alive nodes for efficient scanning
     private nodes: VertexNode[] = []; // Historical list for the final result
+    private nodeDependentEdges = new Map<VertexNode, Set<Edge>>(); // reflex node -> edges whose holder changes affect it
+    private edgeDependents = new Map<Edge, Set<VertexNode>>(); // edge -> reflex nodes affected by its holder change
     timeEpsilon = 0;
     private pointEpsilon = 0;
 
@@ -38,8 +39,9 @@ export class Skeleton {
         sanitizePolygon(this.polygon);
         this.queue = new FlatQueue<number>();
         this.events = [];
-        this.activeNodes.clear();
         this.nodes = [];
+        this.nodeDependentEdges.clear();
+        this.edgeDependents.clear();
         this.result = { edges: [], nodes: [], polygonHistory: null };
     }
 
@@ -67,7 +69,7 @@ export class Skeleton {
     }
 
     private processCluster(cluster: SkeletonEvent[]): void {
-        const splits = cluster.filter((e): e is SplitEvent => e.type === 'split' && this.isValidSplitEvent(e));
+        const splits = cluster.filter((e): e is SplitEvent => e.type === 'split');
         const edges = cluster.filter((e): e is EdgeEvent => e.type === 'edge' && this.isValidEdgeEvent(e));
         const edgeNodes = new Set<VertexNode>(edges.flatMap(e => [e.nodeA, e.nodeB]));
 
@@ -96,6 +98,7 @@ export class Skeleton {
             }
 
             const { point, time } = cluster[0];
+            const affectedEdges = new Set<Edge>();
 
             for (const chain of chains) {
                 for (const node of chain) {
@@ -105,6 +108,9 @@ export class Skeleton {
 
                 const prev = chain[0].previous!;
                 const next = chain[chain.length - 1].next!;
+
+                if (chain[0].prevEdge) affectedEdges.add(chain[0].prevEdge);
+                for (const node of chain) if (node.nextEdge) affectedEdges.add(node.nextEdge);
 
                 if (prev === chain[chain.length - 1] || next === chain[0]) continue; // Total collapse
 
@@ -119,7 +125,7 @@ export class Skeleton {
                     this.pushNextNodeEvents(newNode);
                 }
             }
-            this.refreshSplitEvents();
+            this.recomputeAffectedSplitEvents(affectedEdges);
         }
 
         for (const split of splits) {
@@ -142,7 +148,9 @@ export class Skeleton {
 
         this.pushNextNodeEvents(v1);
         this.pushNextNodeEvents(v2);
-        this.refreshSplitEvents();
+
+        const affectedEdges = new Set<Edge>([node.prevEdge!, splitEdge, node.nextEdge!]);
+        this.recomputeAffectedSplitEvents(affectedEdges);
     }
 
     // Helper to streamline node creation and caching
@@ -156,13 +164,22 @@ export class Skeleton {
         node.isReflex = cross < 0;
 
         this.nodes.push(node);
-        this.activeNodes.add(node);
         return node;
     }
 
     private markProcessed(node: VertexNode): void {
         node.processed = true;
-        this.activeNodes.delete(node); // Remove from active checking
+        const deps = this.nodeDependentEdges.get(node);
+        if (deps) {
+            for (const edge of deps) {
+                const set = this.edgeDependents.get(edge);
+                if (set) {
+                    set.delete(node);
+                    if (set.size === 0) this.edgeDependents.delete(edge);
+                }
+            }
+            this.nodeDependentEdges.delete(node);
+        }
     }
 
     private pushNextNodeEvents(node: VertexNode): void {
@@ -175,7 +192,7 @@ export class Skeleton {
     private pushNextSplitEvent(node: VertexNode): void {
         if (!node.isReflex || node.processed) return;
 
-        let closestSplitEvent: SplitEvent | null = null;
+        const candidates: { event: SplitEvent; valid: boolean }[] = [];
         let current = node.next;
         const visited = new Set<VertexNode>();
 
@@ -189,24 +206,73 @@ export class Skeleton {
                 current !== node.previous && endNode !== node) {
 
                 const candidate = calculateSplitIntersection(node, oppositeEdge, current, this.timeEpsilon);
-                if (candidate && isSplitInRegion(candidate, candidate.time, current, endNode, this.pointEpsilon) &&
-                    (!closestSplitEvent || candidate.time < closestSplitEvent.time - this.timeEpsilon)) {
-                    closestSplitEvent = candidate;
+                if (candidate) {
+                    const valid = isSplitInRegion(candidate, candidate.time, current, endNode, this.pointEpsilon);
+                    candidates.push({ event: candidate, valid });
                 }
             }
             current = current.next;
         }
 
-        if (closestSplitEvent) {
-            this.events!.push(closestSplitEvent);
-            this.queue!.push(this.events!.length - 1, closestSplitEvent.time);
+        let target: SplitEvent | null = null;
+        for (const c of candidates) {
+            if (c.valid && (!target || c.event.time < target.time - this.timeEpsilon)) {
+                target = c.event;
+            }
+        }
+
+        const newEdges = new Set<Edge>();
+        if (target) {
+            newEdges.add(target.splitEdge);
+            for (const c of candidates) {
+                if (!c.valid && c.event.time < target.time - this.timeEpsilon) {
+                    newEdges.add(c.event.splitEdge);
+                }
+            }
+        } else {
+            for (const c of candidates) {
+                newEdges.add(c.event.splitEdge);
+            }
+        }
+
+        const oldEdges = this.nodeDependentEdges.get(node);
+        if (oldEdges) {
+            for (const edge of oldEdges) {
+                const set = this.edgeDependents.get(edge);
+                if (set) {
+                    set.delete(node);
+                    if (set.size === 0) this.edgeDependents.delete(edge);
+                }
+            }
+            this.nodeDependentEdges.delete(node);
+        }
+
+        if (newEdges.size > 0) {
+            this.nodeDependentEdges.set(node, newEdges);
+            for (const edge of newEdges) {
+                let set = this.edgeDependents.get(edge);
+                if (!set) {
+                    set = new Set();
+                    this.edgeDependents.set(edge, set);
+                }
+                set.add(node);
+            }
+        }
+
+        if (target) {
+            this.events!.push(target);
+            this.queue!.push(this.events!.length - 1, target.time);
         }
     }
 
-    private refreshSplitEvents(): void {
-        // Optimized: Only scan currently alive nodes, instead of history
-        for (const node of this.activeNodes) {
-            if (node.isReflex) this.pushNextSplitEvent(node);
+    private recomputeAffectedSplitEvents(affectedEdges: Set<Edge>): void {
+        const affectedNodes = new Set<VertexNode>();
+        for (const edge of affectedEdges) {
+            const set = this.edgeDependents.get(edge);
+            if (set) for (const node of set) affectedNodes.add(node);
+        }
+        for (const node of affectedNodes) {
+            this.pushNextSplitEvent(node);
         }
     }
 
@@ -247,7 +313,6 @@ export class Skeleton {
 
         do {
             this.nodes.push(current);
-            this.activeNodes.add(current);
             this.pushNextNodeEvents(current);
             current = current.next!;
         } while (current && current !== head);
