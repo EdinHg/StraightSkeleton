@@ -1,4 +1,3 @@
-import { Polygon } from "./Polygon";
 import { Point } from "./Point";
 import { Edge } from "./Edge";
 import type { VertexNode } from "./VertexNode";
@@ -14,7 +13,6 @@ export interface SkeletonEdge {
 }
 
 export interface StraightSkeletonResult {
-    edges: Partial<SkeletonEdge>[];          // All interior skeleton line segments
-    polygonHistory: Polygon[] | null;      // For animation pu
-    nodes: VertexNode[];                  // All vertex nodes created during computation
+    edges: Partial<SkeletonEdge>[];
+    nodes: VertexNode[];
 }

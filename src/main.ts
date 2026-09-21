@@ -10,6 +10,10 @@ import { generateRandomSimplePolygon } from './randomPolygon'
 
 const CHEVRON = '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
 const CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>'
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>'
+
+const THEME_KEY = 'straight-skeleton-theme'
 
 const PRESET_CATEGORIES: { key: string; label: string }[] = [
     { key: 'convex', label: 'Convex' },
@@ -29,6 +33,9 @@ app.innerHTML = `
         <div class="panel-body" id="panel-body"></div>
       </aside>
       <div class="editor-overlay">
+        <button class="icon-btn" id="theme-toggle" title="Toggle light/dark">
+          ${SUN}
+        </button>
         <button class="icon-btn" id="undo" title="Undo last point">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
         </button>
@@ -123,9 +130,11 @@ function recompute() {
     const skeleton = new Skeleton(polygon).compute()
     if (!skeleton) {
         editor.clearSkeleton()
+        viewer.setSkeleton(null)
         return
     }
     editor.setSkeleton(skeleton)
+    viewer.setSkeleton(skeleton, polygon)
 }
 
 function loadPreset(preset: PolygonPreset) {
@@ -136,6 +145,23 @@ function loadPreset(preset: PolygonPreset) {
 }
 
 editor.onPolygonChanged = recompute
+
+const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement
+let lightTheme = localStorage.getItem(THEME_KEY) === 'light'
+
+function applyTheme() {
+    document.documentElement.dataset.theme = lightTheme ? 'light' : 'dark'
+    themeToggle.innerHTML = lightTheme ? MOON : SUN
+    editor.setTheme(lightTheme)
+    viewer.setTheme(lightTheme)
+    recompute()
+}
+
+themeToggle.addEventListener('click', () => {
+    lightTheme = !lightTheme
+    localStorage.setItem(THEME_KEY, lightTheme ? 'light' : 'dark')
+    applyTheme()
+})
 
 const presetGroups: Record<string, HTMLDivElement> = {}
 for (const category of PRESET_CATEGORIES) {
@@ -184,7 +210,8 @@ function renderSavedGroup() {
         remove.innerHTML = CROSS
         remove.addEventListener('click', () => {
             deletePolygon(entry.name)
-            renderSavedGroup()
+renderSavedGroup()
+applyTheme()
         })
 
         row.append(load, remove)

@@ -19,19 +19,16 @@ function segmentsCross(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
     const d3 = cross(a1, a2, b1)
     const d4 = cross(a1, a2, b2)
 
-    // Proper crossing
     if (((d1 > EPS && d2 < -EPS) || (d1 < -EPS && d2 > EPS)) &&
         ((d3 > EPS && d4 < -EPS) || (d3 < -EPS && d4 > EPS))) {
         return true
     }
 
-    // Shared-endpoint contact is NOT a crossing
     const aEq = Math.abs(a1.x - b1.x) < EPS && Math.abs(a1.y - b1.y) < EPS
     const aEqB = Math.abs(a1.x - b2.x) < EPS && Math.abs(a1.y - b2.y) < EPS
     const a2Eq = Math.abs(a2.x - b1.x) < EPS && Math.abs(a2.y - b1.y) < EPS
     const a2EqB = Math.abs(a2.x - b2.x) < EPS && Math.abs(a2.y - b2.y) < EPS
 
-    // Collinear overlap: check onSegment with non-shared endpoints
     if (Math.abs(d1) < EPS && Math.abs(d2) < EPS && Math.abs(d3) < EPS && Math.abs(d4) < EPS) {
         if (onSegment(a1, a2, b1) && !aEq && !aEqB) return true
         if (onSegment(a1, a2, b2) && !aEq && !a2EqB) return true
@@ -39,7 +36,6 @@ function segmentsCross(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
         if (onSegment(b1, b2, a2) && !aEqB && !a2Eq) return true
     }
 
-    // Endpoint touching (collinear but not overlap, just touching at a shared point) — not a crossing
     return false
 }
 
@@ -61,7 +57,6 @@ function isSimplePolygon(pts: Point[]): boolean {
     const n = pts.length
     if (n < 3) return false
 
-    // No coincident vertices
     for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
             const dx = pts[i].x - pts[j].x
@@ -70,7 +65,6 @@ function isSimplePolygon(pts: Point[]): boolean {
         }
     }
 
-    // No proper crossings or non-adjacent collinear overlap
     for (let i = 0; i < n; i++) {
         const j = (i + 1) % n
         for (let k = i + 2; k < n; k++) {
@@ -80,7 +74,6 @@ function isSimplePolygon(pts: Point[]): boolean {
         }
     }
 
-    // No collinear consecutive edges (degenerate)
     for (let i = 0; i < n; i++) {
         const a = pts[(i - 1 + n) % n]
         const b = pts[i]
@@ -216,7 +209,6 @@ export function generateRandomSimplePolygon(n: number, width: number, height: nu
         if (!failed && isSimplePolygon(poly)) return poly
     }
 
-    // Fallback: radial sort — always simple, always n vertices
     const points: Point[] = []
     for (let i = 0; i < n; i++) {
         points.push(new Point(

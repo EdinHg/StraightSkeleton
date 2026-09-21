@@ -16,7 +16,6 @@ function clamp(value: number, min: number, max: number): number {
 const OUTLINE = '#e6e6e6'
 const SKELETON = '#ff5a4d'
 const NODE = '#4dd2ff'
-const LABEL = '#ffd34d'
 
 export class PolygonEditor {
     private container: HTMLDivElement
@@ -37,6 +36,9 @@ export class PolygonEditor {
     private panning = false
     private spaceDown = false
     private panStart = { clientX: 0, clientY: 0, stageX: 0, stageY: 0 }
+    private outline = OUTLINE
+    private vertexFill = '#fff'
+    private shapeFill = 'rgba(255,255,255,0.06)'
 
     public onPolygonChanged: (() => void) | null = null
 
@@ -241,24 +243,6 @@ export class PolygonEditor {
         this.polygonLayer.destroyChildren()
         this.overlayLayer.destroyChildren()
 
-        const history = this.currentSkeleton?.polygonHistory
-        if (history) {
-            const subpaths: string[] = []
-            for (const poly of history) {
-                if (poly.vertices.length < 3) continue
-                subpaths.push(this.pathData(poly.vertices))
-            }
-            if (subpaths.length > 0) {
-                this.skeletonLayer.add(new Konva.Path({
-                    data: subpaths.join(' '),
-                    fill: 'rgba(230,230,230,0.05)',
-                    fillRule: 'evenodd',
-                    stroke: 'rgba(230,230,230,0.16)',
-                    strokeWidth: invScale,
-                }))
-            }
-        }
-
         if (this.points.length > 0) {
             if (this.closed) {
                 const subpaths = [this.pathData(this.points)]
@@ -267,9 +251,9 @@ export class PolygonEditor {
                 }
                 this.polygonLayer.add(new Konva.Path({
                     data: subpaths.join(' '),
-                    fill: 'rgba(255,255,255,0.06)',
+                    fill: this.shapeFill,
                     fillRule: 'evenodd',
-                    stroke: OUTLINE,
+                    stroke: this.outline,
                     strokeWidth: 2 * invScale,
                     lineJoin: 'round',
                 }))
@@ -279,7 +263,7 @@ export class PolygonEditor {
                 if (this.mousePos) preview.push(this.mousePos.x, this.mousePos.y)
                 this.polygonLayer.add(new Konva.Line({
                     points: preview,
-                    stroke: OUTLINE,
+                    stroke: this.outline,
                     strokeWidth: 2 * invScale,
                     lineJoin: 'round',
                 }))
@@ -309,16 +293,7 @@ export class PolygonEditor {
         for (let i = 0; i < this.points.length; i++) {
             const p = this.points[i]
             this.overlayLayer.add(new Konva.Circle({
-                x: p.x, y: p.y, radius: 4 * invScale, fill: '#fff', listening: false,
-            }))
-            this.overlayLayer.add(new Konva.Text({
-                x: p.x + 6 * invScale,
-                y: p.y - 15 * invScale,
-                text: String(i),
-                fontSize: 11 * invScale,
-                fontFamily: 'monospace',
-                fill: LABEL,
-                listening: false,
+                x: p.x, y: p.y, radius: 4 * invScale, fill: this.vertexFill, listening: false,
             }))
         }
 
@@ -372,6 +347,13 @@ export class PolygonEditor {
 
     public setSkeleton(skeleton: StraightSkeletonResult) {
         this.currentSkeleton = skeleton
+        this.render()
+    }
+
+    public setTheme(light: boolean) {
+        this.outline = light ? '#333a42' : OUTLINE
+        this.vertexFill = light ? '#1a1d21' : '#fff'
+        this.shapeFill = light ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.06)'
         this.render()
     }
 

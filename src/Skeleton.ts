@@ -25,9 +25,9 @@ export class Skeleton {
     queue?: FlatQueue<number>;
     events?: SkeletonEvent[];
     private slav?: SLAV;
-    private nodes: VertexNode[] = []; // Historical list for the final result
-    private nodeDependentEdges = new Map<VertexNode, Set<Edge>>(); // reflex node -> edges whose holder changes affect it
-    private edgeDependents = new Map<Edge, Set<VertexNode>>(); // edge -> reflex nodes affected by its holder change
+    private nodes: VertexNode[] = [];
+    private nodeDependentEdges = new Map<VertexNode, Set<Edge>>();
+    private edgeDependents = new Map<Edge, Set<VertexNode>>();
     timeEpsilon = 0;
     private pointEpsilon = 0;
     private currentTime = 0;
@@ -45,7 +45,7 @@ export class Skeleton {
         this.currentTime = 0;
         this.nodeDependentEdges.clear();
         this.edgeDependents.clear();
-        this.result = { edges: [], nodes: [], polygonHistory: null };
+        this.result = { edges: [], nodes: [] };
     }
 
     private isValidEdgeEvent(event: EdgeEvent): boolean {
@@ -117,7 +117,7 @@ export class Skeleton {
                 if (chain[0].prevEdge) affectedEdges.add(chain[0].prevEdge);
                 for (const node of chain) if (node.nextEdge) affectedEdges.add(node.nextEdge);
 
-                if (prev === chain[chain.length - 1] || next === chain[0]) continue; // Total collapse
+                if (prev === chain[chain.length - 1] || next === chain[0]) continue; 
 
                 if (prev === next) {
                     if (!prev.processed) {
@@ -158,12 +158,9 @@ export class Skeleton {
         if (nodeLav && edgeLav) {
             this.slav!.remove(nodeLav);
             if (nodeLav === edgeLav) {
-                // Same contour: the split divides it into two chains.
                 this.addChainOrCollapse(v1);
                 this.addChainOrCollapse(v2);
             } else {
-                // Opposite edge belongs to another contour (e.g. a hole): the
-                // split merges the two LAVs into a single chain.
                 this.slav!.remove(edgeLav);
                 this.addChainOrCollapse(v1);
             }
@@ -176,12 +173,6 @@ export class Skeleton {
         this.recomputeAffectedSplitEvents(affectedEdges);
     }
 
-    /**
-     * Adds a freshly created chain as a new LAV. Chains with two or fewer
-     * vertices are already degenerate (the contour collapsed into a line at the
-     * event point), so they are collapsed immediately instead of generating
-     * further events — mirroring polyskel's `handle_split_event`.
-     */
     private addChainOrCollapse(head: VertexNode): void {
         const nodes = this.collectChain(head);
 
@@ -244,13 +235,11 @@ export class Skeleton {
         return true;
     }
 
-    // Helper to streamline node creation and caching
     private createNode(point: Point, time: number, prevEdge: Edge, nextEdge: Edge): VertexNode {
         const node = new VertexNode(point);
         node.time = time;
         node.setEdges(prevEdge, nextEdge);
         node.computeBisector();
-        
         const cross = prevEdge.normal.cross(nextEdge.normal);
         node.isReflex = cross < 0;
 
@@ -285,8 +274,6 @@ export class Skeleton {
 
         const candidates: { event: SplitEvent; valid: boolean }[] = [];
 
-        // Consider edges from every LAV (the reflex vertex's own contour and all
-        // holes), not just its own circular list.
         this.slav!.forEachNode((current) => {
             const oppositeEdge = current.nextEdge;
             const endNode = current.next;
@@ -422,8 +409,6 @@ export class Skeleton {
             this.currentTime = baseTime;
 
             const timeEvents: SkeletonEvent[] = [];
-            
-            // Simplified batch extraction
             while (this.queue!.length > 0 && this.events![this.queue!.peek()!]!.time <= baseTime + this.timeEpsilon) {
                 timeEvents.push(this.events![this.queue!.pop()!]!);
             }
@@ -481,9 +466,6 @@ export function calculateSplitIntersection(
 
     const deltaT = numerator / denom;
 
-    // A non-positive advance means the reflex vertex already lies on the
-    // opposite edge at its creation time. Such a split is degenerate (it would
-    // produce a zero-length edge and re-trigger itself indefinitely).
     if (!Number.isFinite(deltaT) || deltaT <= epsilon) {
         debug('calculateSplitIntersection: deltaT non-positive (' + deltaT.toFixed(6) + ') for node=#' + reflexNode.id);
         return null;

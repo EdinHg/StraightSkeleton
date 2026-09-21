@@ -1,5 +1,9 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { generateRoofWireframe, generateBaseOutline, polygonCentroid } from './roofWireframe'
+import type { Segment3D } from './roofWireframe'
+import type { StraightSkeletonResult } from './models/StraightSkeletonResult'
+import type { Polygon } from './models/Polygon'
 
 export class RoofViewer {
     private container: HTMLElement
@@ -9,6 +13,8 @@ export class RoofViewer {
     private controls: OrbitControls
     private roof: THREE.Group | null = null
     private frame = 0
+    private pitchDegrees = 45
+    private light = false
 
     constructor(container: HTMLElement) {
         this.container = container
@@ -34,18 +40,65 @@ export class RoofViewer {
         key.position.set(80, 140, 60)
         this.scene.add(key)
 
-        const grid = new THREE.GridHelper(400, 40, 0x33424f, 0x1a2229)
-        this.scene.add(grid)
-
         window.addEventListener('resize', this.onResize)
         this.resize()
         this.animate()
     }
 
-    public setRoof(group: THREE.Group | null) {
-        if (this.roof) this.scene.remove(this.roof)
+    public setTheme(light: boolean) {
+        this.light = light
+        this.scene.background = new THREE.Color(light ? 0xffffff : 0x0d0f12)
+    }
+
+    public setSkeleton(skeleton: StraightSkeletonResult | null, polygon: Polygon | null = null) {
+        if (this.roof) {
+            this.scene.remove(this.roof)
+            disposeGroup(this.roof)
+            this.roof = null
+        }
+        if (!skeleton || !polygon) return
+
+        const segments = generateRoofWireframe(skeleton, this.pitchDegrees)
+        const baseOutline = generateBaseOutline(polygon)
+
+        const group = new THREE.Group()
+
+        const centroid = polygonCentroid(polygon)
+        group.position.set(-centroid.x, -centroid.y, -centroid.z)
+
+        if (segments.length > 0) {
+            group.add(makeLineSegments(segments, 0xff5a4d))
+
+            for (const seg of segments) {
+                const dot = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.6, 8, 6),
+                    new THREE.MeshBasicMaterial({ color: 0x4dd2ff }),
+                )
+                dot.position.set(seg.end.x, seg.end.y, seg.end.z)
+                group.add(dot)
+            }
+        }
+
+        if (baseOutline.length > 0) {
+            group.add(makeLineSegments(baseOutline, this.light ? 0x333a42 : 0xe6e6e6))
+        }
+
         this.roof = group
-        if (this.roof) this.scene.add(this.roof)
+        this.scene.add(group)
+
+        const bounds = new THREE.Box3().setFromObject(group)
+        this.frameCamera(bounds)
+    }
+
+    private frameCamera(bounds: THREE.Box3) {
+        if (bounds.isEmpty()) return
+
+        const size = bounds.getSize(new THREE.Vector3())
+        const radius = Math.max(size.length(), 1)
+
+        this.controls.target.set(0, 0, 0)
+        this.camera.position.set(radius, radius, radius)
+        this.controls.update()
     }
 
     private onResize = () => this.resize()
@@ -68,8 +121,31 @@ export class RoofViewer {
     public destroy() {
         cancelAnimationFrame(this.frame)
         window.removeEventListener('resize', this.onResize)
+        if (this.roof) disposeGroup(this.roof)
         this.controls.dispose()
         this.renderer.dispose()
         this.renderer.domElement.remove()
     }
+}
+
+function makeLineSegments(segments: Segment3D[], color: number): THREE.LineSegments {
+    const positions: number[] = []
+    for (const seg of segments) {
+        positions.push(seg.start.x, seg.start.y, seg.start.z)
+        positions.push(seg.end.x, seg.end.y, seg.end.z)
+    }
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geometry.computeBoundingSphere()
+    return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color }))
+}
+
+function disposeGroup(group: THREE.Group) {
+    group.traverse((obj) => {
+        const mesh = obj as THREE.Mesh
+        if (mesh.geometry) mesh.geometry.dispose()
+        const material = mesh.material as THREE.Material | THREE.Material[] | undefined
+        if (Array.isArray(material)) material.forEach(m => m.dispose())
+        else material?.dispose()
+    })
 }

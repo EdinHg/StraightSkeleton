@@ -41,8 +41,6 @@ export class Contour {
         const curr = this.vertices[index];
         const next = this.vertices[(index + 1) % n];
 
-        // Material always lies to the left of every directed edge (outer CCW, holes CW),
-        // so a reflex vertex is always a right turn.
         return crossProduct(prev, curr, next) < 0;
     }
 }
